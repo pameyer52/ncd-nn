@@ -46,7 +46,7 @@ def filter_by_extension(file_lst, ext_lst):
         return (e in ext_lst)
     return [ fn for fn in file_lst if f(fn) ]
 
-#actual work
+#interesting work
 
 #global txtpaths (needed for shared state)
 txtpaths = []
@@ -55,10 +55,10 @@ def compressed_size(z):
     ''' calculate compressed size of data '''
     return float( len( bz2.compress(z) ) )
 
-def init(datadir):
+def init(datadir, extlst ):
     ''' initialize global/shared data '''
     global txtpaths
-    fnames = filter_by_extension( recursive_ls(datadir) , ['.txt'] )
+    fnames = filter_by_extension( recursive_ls(datadir) , extlst )
     def loader(fname):
         ''' file loader '''
         inp = open(fname, 'r')
@@ -82,11 +82,64 @@ def run_nn_single(tpl_a ):
                 txtpath_nn = txtpath_b
     return (txtpath_a, txtpath_nn, dist, )
 
+#support functions for option parsing
+def usage():
+    ''' show usage information '''
+    print('usage info not ready yet')
+
+def parse_extension_list(s):
+    ''' extract valid file extensions from option string '''
+    return [e.strip() for e in s.split(',') ]
+
+
 if __name__ == '__main__':
+    import getopt
+    import sys
+
+    #option parsing
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'hvn:d:o:e:',['help','verbose','nproc=','datadir=','output=','extensions='])
+    except getopt.GetoptError, err:
+        print(err)
+        usage()
+        sys.exit(1)
+
+    #default values
+    verobse = False
+    nproc = cpu_count()
     ddir = 'data/'
     reportfile = 'nn-report.txt'
-    init(ddir)
-    pool = Pool( cpu_count() )
+    extlst = ['.txt']
+
+    #process options
+    if 0 != len(args):
+        usage()
+        sys.exit(1) #shouldn't be any arguments
+
+    for o,a in opts:
+        if o in ('-h','--help'):
+            usage()
+            sys.exit(0)
+        elif o in ('-v','--verbose'):
+            verbose = True
+        elif o in ('-n','--nproc'):
+            try:
+                nproc = int(a)
+            except ValueError:
+                usage()
+                sys.exit(1)
+        elif o in ('-d','--datadir'):
+            ddir = a
+        elif o in ('-o','--output'):
+            reportfile = a
+        elif o in ('-e','--extensions'):
+            extlst = parse_extension_list(a)
+        else:
+            usage()
+            assert False, 'unrecognized program option'
+
+    init(ddir, extlst)
+    pool = Pool( nproc )
     nnlst0 = pool.map( run_nn_single, txtpaths )
     nnlst = [ (a,b,d,) for (a,b,d,) in nnlst0 if None != b ]
     nnlst.sort( key = operator.itemgetter(2) )
