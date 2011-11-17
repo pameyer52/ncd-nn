@@ -85,7 +85,15 @@ def run_nn_single(tpl_a ):
 #support functions for option parsing
 def usage():
     ''' show usage information '''
-    print('usage info not ready yet')
+    print('ncd-nn')
+    print('options: ')
+    print('\t-v --verbose \t\t\tverbose output during processing')
+    #TODO - actually do something with verbose flag
+    print('\t-h --help\t\t\tshow this usage information')
+    print('\t-n --nproc=NUMBER\t\tnumber of processes (default is number of logical CPUs)')
+    print('\t-d --datadir=DIRECTORY\t\tdirectory containing files to process')
+    print('\t-o --output=FILENAME\t\toutput file for nearest-neighbor report')
+    print('\t-e --extensions=.EXT1,EXT2\tlist of file extensions to process')
 
 def parse_extension_list(s):
     ''' extract valid file extensions from option string '''
@@ -138,6 +146,12 @@ if __name__ == '__main__':
             usage()
             assert False, 'unrecognized program option'
 
+    #input check
+    if not os.path.exists( ddir ):
+        usage()
+        sys.exit(1)
+
+    #main work
     init(ddir, extlst)
     pool = Pool( nproc )
     nnlst0 = pool.map( run_nn_single, txtpaths )
