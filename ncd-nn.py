@@ -48,7 +48,7 @@ def filter_by_extension(file_lst, ext_lst):
 
 #interesting work
 
-#global txtpaths (needed for shared state)
+#txtpaths = [ (filename, uncompressed data, compressed data) ]
 txtpaths = []
 
 def compressed_size(z):
@@ -60,7 +60,7 @@ def init(datadir, extlst ):
     global txtpaths
     fnames = filter_by_extension( recursive_ls(datadir) , extlst )
     def loader(fname):
-        ''' file loader '''
+        ''' load un-compressed and compressed data from file'''
         inp = open(fname, 'r')
         dat = inp.read()
         inp.close()
@@ -88,7 +88,6 @@ def usage():
     print('ncd-nn')
     print('options: ')
     print('\t-v --verbose \t\t\tverbose output during processing')
-    #TODO - actually do something with verbose flag
     print('\t-h --help\t\t\tshow this usage information')
     print('\t-n --nproc=NUMBER\t\tnumber of processes (default is number of logical CPUs)')
     print('\t-d --datadir=DIRECTORY\t\tdirectory containing files to process')
@@ -152,12 +151,26 @@ if __name__ == '__main__':
         sys.exit(1)
 
     #main work
+    if verbose :
+        print('initializing')
     init(ddir, extlst)
     pool = Pool( nproc )
+    if verbose:
+        print('calculating nearest-neighbors using %d processes'%(nproc,))
     nnlst0 = pool.map( run_nn_single, txtpaths )
+    if verbose:
+        print('filtering possible nn failure') 
     nnlst = [ (a,b,d,) for (a,b,d,) in nnlst0 if None != b ]
+    if verbose:
+        if len(nnlst0) != len(nnlst):
+            print('filtering detected a nn failure') #TODO check and remove if un-needed
+        print('sorting results based on ncd')
     nnlst.sort( key = operator.itemgetter(2) )
+    if verbose:
+        print('storing output to %s'%(reportfile,))
     opf = open(reportfile,'w')
     for tpl in nnlst:
         opf.write( '%s , %s : %f\n'%tpl)
     opf.close()
+    if verbose:
+        print('done')
