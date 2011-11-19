@@ -2,15 +2,6 @@
 
 ''' text file nearest neighbor using normalized compression distance '''
 
-#modification of txtnn5.py for in-memory usage 
-#modification of txtnn6.py to keep compressed copy of data in memory as well
-# based on benchmarking vs txtnn3.py on abel (two processors), keeping a 
-# compressed copy in memory and using multiple processes give cut execution 
-# time to ~25% of original.  Keeping the uncompressed copy in memory alone
-# does not seem to reduce runtime much, so disk i/o may not be a bottleneck.
-# On a system with more processors, the run time improvement should increase
-# further.
-
 import operator
 from multiprocessing import Pool, cpu_count
 
@@ -31,7 +22,6 @@ def recursive_ls(wdir):
         f = [ os.path.join(d, s) for s in os.listdir(d) ]
         for dn in [ s for s in f if os.path.isdir(s) ]:
             dlst.append( dn )
-        #for fn in filter( lambda s : not os.path.isdir(s), f):
         for fn in [ s for s in f if not os.path.isdir(s) ]:
             flst.append( fn)
     return flst
@@ -46,7 +36,6 @@ def filter_by_extension(file_lst, ext_lst):
         return (e in ext_lst)
     return [ fn for fn in file_lst if f(fn) ]
 
-#interesting work
 
 #txtpaths = [ (filename, uncompressed data, compressed data) ]
 txtpaths = []
