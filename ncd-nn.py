@@ -93,7 +93,7 @@ def usage():
     print('\t-n --nproc=NUMBER\t\tnumber of processes (default is number of logical CPUs)')
     print('\t-d --datadir=DIRECTORY\t\tdirectory containing files to process')
     print('\t-o --output=FILENAME\t\toutput file for nearest-neighbor report')
-    print('\t-e --extensions=.EXT1,EXT2\tlist of file extensions to process')
+    print('\t-e --extensions=.EXT1,EXT2\tlist of file extensions to process (default .txt)')
 
 def parse_extension_list(s):
     ''' extract valid file extensions from option string '''
