@@ -107,7 +107,7 @@ if __name__ == '__main__':
     #option parsing
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hvn:d:o:e:',['help','verbose','nproc=','datadir=','output=','extensions='])
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         print(err)
         usage()
         sys.exit(1)
