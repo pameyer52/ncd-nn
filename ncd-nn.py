@@ -2,15 +2,6 @@
 
 ''' text file nearest neighbor using normalized compression distance '''
 
-#modification of txtnn5.py for in-memory usage 
-#modification of txtnn6.py to keep compressed copy of data in memory as well
-# based on benchmarking vs txtnn3.py on abel (two processors), keeping a 
-# compressed copy in memory and using multiple processes give cut execution 
-# time to ~25% of original.  Keeping the uncompressed copy in memory alone
-# does not seem to reduce runtime much, so disk i/o may not be a bottleneck.
-# On a system with more processors, the run time improvement should increase
-# further.
-
 import operator
 from multiprocessing import Pool, cpu_count
 
@@ -31,7 +22,6 @@ def recursive_ls(wdir):
         f = [ os.path.join(d, s) for s in os.listdir(d) ]
         for dn in [ s for s in f if os.path.isdir(s) ]:
             dlst.append( dn )
-        #for fn in filter( lambda s : not os.path.isdir(s), f):
         for fn in [ s for s in f if not os.path.isdir(s) ]:
             flst.append( fn)
     return flst
@@ -46,9 +36,8 @@ def filter_by_extension(file_lst, ext_lst):
         return (e in ext_lst)
     return [ fn for fn in file_lst if f(fn) ]
 
-#interesting work
 
-#global txtpaths (needed for shared state)
+#txtpaths = [ (filename, uncompressed data, compressed data) ]
 txtpaths = []
 
 def compressed_size(z):
@@ -60,7 +49,7 @@ def init(datadir, extlst ):
     global txtpaths
     fnames = filter_by_extension( recursive_ls(datadir) , extlst )
     def loader(fname):
-        ''' file loader '''
+        ''' load un-compressed and compressed data from file'''
         inp = open(fname, 'r')
         dat = inp.read()
         inp.close()
@@ -88,7 +77,6 @@ def usage():
     print('ncd-nn')
     print('options: ')
     print('\t-v --verbose \t\t\tverbose output during processing')
-    #TODO - actually do something with verbose flag
     print('\t-h --help\t\t\tshow this usage information')
     print('\t-n --nproc=NUMBER\t\tnumber of processes (default is number of logical CPUs)')
     print('\t-d --datadir=DIRECTORY\t\tdirectory containing files to process')
@@ -152,12 +140,26 @@ if __name__ == '__main__':
         sys.exit(1)
 
     #main work
+    if verbose :
+        print('initializing')
     init(ddir, extlst)
     pool = Pool( nproc )
+    if verbose:
+        print('calculating nearest-neighbors using %d processes'%(nproc,))
     nnlst0 = pool.map( run_nn_single, txtpaths )
+    if verbose:
+        print('filtering possible nn failure') 
     nnlst = [ (a,b,d,) for (a,b,d,) in nnlst0 if None != b ]
+    if verbose:
+        if len(nnlst0) != len(nnlst):
+            print('filtering detected a nn failure') #TODO check and remove if un-needed
+        print('sorting results based on ncd')
     nnlst.sort( key = operator.itemgetter(2) )
+    if verbose:
+        print('storing output to %s'%(reportfile,))
     opf = open(reportfile,'w')
     for tpl in nnlst:
         opf.write( '%s , %s : %f\n'%tpl)
     opf.close()
+    if verbose:
+        print('done')
