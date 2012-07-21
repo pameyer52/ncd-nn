@@ -101,7 +101,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     #default values
-    verobse = False
+    verbose = False
     nproc = cpu_count()
     ddir = 'data/'
     reportfile = 'nn-report.txt'
